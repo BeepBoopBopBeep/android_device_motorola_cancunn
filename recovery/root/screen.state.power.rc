@@ -1,0 +1,22 @@
+# Screen off
+on property:debug.tracing.screen_state="1"
+    exec_start screenoff-state-power-sh
+
+# Screen on
+on property:debug.tracing.screen_state="2"
+    exec_start screenon-state-power-sh
+
+service screenoff-state-power-sh /vendor/bin/screenoff.state.power.sh
+    class main
+    user root
+    group root system
+    oneshot
+    disabled
+
+service screenon-state-power-sh /vendor/bin/screenon.state.power.sh
+    class main
+    user root
+    group root system
+    oneshot
+    disabled
+
