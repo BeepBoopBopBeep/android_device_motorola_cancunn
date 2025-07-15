@@ -1,0 +1,48 @@
+#!/system/bin/sh
+# Written by Draco (tytydraco @ GitHub)
+
+MAGISKBOOT="/data/adb/magisk/magiskboot"
+
+err() {
+    echo -e "\e[91m[!] $@\e[39m"
+    exit 1
+}
+
+[[ ! -f "$MAGISKBOOT" ]] && err "Failed to find magiskboot binary. Exiting."
+[[ -z "$@" ]] && err "No arguments provided. Exiting."
+
+SLOT=$(getprop ro.boot.slot_suffix)
+BOOT="boot$SLOT"
+BOOTIMG="/dev/block/by-name/$BOOT"
+
+mkdir -p /data/local/tmp/cmdpatch
+cd /data/local/tmp/cmdpatch
+
+# Backup original boot image
+dd if="$BOOTIMG" of="/sdcard/$BOOT.img.bk"
+
+# Unpack the boot image
+$MAGISKBOOT unpack -h "$BOOTIMG"
+
+# Read the current cmdline
+cmdline=$(grep "cmdline=" header | sed 's/cmdline=//')
+
+# Process each tweak provided
+for tweak in "$@"; do
+    echo "=== Removing $tweak ==="
+
+    # Remove the tweak, even if it's at the end
+    cmdline=$(echo "$cmdline" | sed -E "s/(^| )$tweak($| )/ /g" | sed 's/[[:space:]]*$//')
+done
+
+# Update header with the modified cmdline
+sed -i "s|^cmdline=.*|cmdline=$cmdline|" header
+
+# Repack the modified boot image
+$MAGISKBOOT repack "$BOOTIMG" new.img PATCHVBMETAFLAG=true
+
+# Flash the modified boot image
+dd if=new.img of="$BOOTIMG"
+
+# Clean up
+rm -rf /data/local/tmp/cmdpatch

@@ -1,0 +1,35 @@
+#!/system/bin/sh
+# Written by Draco (tytydraco @ GitHub)
+
+MAGISKBOOT="/data/adb/magisk/magiskboot"
+
+err() {
+	echo -e "\e[91m[!] $@\e[39m"
+	exit 1
+}
+
+[[ ! -f "$MAGISKBOOT" ]] && err "Failed to find magiskboot binary. Exiting."
+[[ -z "$@" ]] && err "No arguments provided. Exiting."
+
+SLOT=`getprop ro.boot.slot_suffix`
+BOOT="boot$SLOT"
+BOOTIMG="/dev/block/by-name/$BOOT"
+
+mkdir -p /data/local/tmp/cmdpatch
+cd /data/local/tmp/cmdpatch
+
+dd if="$BOOTIMG" of="/sdcard/$BOOT.img.bk"
+$MAGISKBOOT unpack -h "$BOOTIMG"
+
+for tweak in "$@"
+do
+	echo "=== $tweak ==="
+	local cmdline=`cat header | grep cmdline=`
+	if [ -n "$cmdline $tweak" ]; then
+		sed -i "s/$tweak //" header
+	fi
+done
+
+$MAGISKBOOT repack "$BOOTIMG" new.img PATCHVBMETAFLAG=true
+dd if=new.img of="$BOOTIMG"
+rm -rf /data/local/tmp/cmdpatch

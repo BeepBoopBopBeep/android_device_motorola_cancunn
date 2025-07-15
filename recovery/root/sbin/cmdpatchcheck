@@ -1,0 +1,29 @@
+#!/system/bin/sh
+# Written by Draco (tytydraco @ GitHub)
+
+MAGISKBOOT="/data/adb/magisk/magiskboot"
+
+if [ ! -f $MAGISKBOOT ]; then
+    MAGISKBOOT="/data/data/com.termux/files/usr/bin/magiskboot"
+fi
+
+err() {
+	echo -e "\e[91m[!] $@\e[39m"
+	exit 1
+}
+
+[[ ! -f "$MAGISKBOOT" ]] && err "Failed to find magiskboot binary. Exiting."
+#[[ -z "$@" ]] && err "No arguments provided. Exiting."
+
+SLOT=`getprop ro.boot.slot_suffix`
+BOOT="boot$SLOT"
+BOOTIMG="/dev/block/by-name/$BOOT"
+
+su -c mkdir -p /data/local/tmp/cmdpatch
+cd /data/local/tmp/cmdpatch
+
+su -c dd if="$BOOTIMG" of="/sdcard/$BOOT.img.bk"
+su -c $MAGISKBOOT unpack -n -h "$BOOTIMG"
+su -c $MAGISKBOOT cleanup
+
+su -c rm -rf /data/local/tmp/cmdpatch
