@@ -20,11 +20,11 @@ on:
       DEVICE_TREE_BRANCH:
         description: 'Custom Recovery Tree Branch' 
         required: true
-        default: 'android-12.1'
+        default: 'android-14'
       DEVICE_PATH:
         description: 'Specify your Device Path' 
         required: true
-        default: 'device/motorola/cancunn'
+        default: 'kernel/motorola/cancunn'
       DEVICE_NAME:
         description: 'Specify your Device Codename' 
         required: true
@@ -41,7 +41,7 @@ on:
       LDCHECK:
         description: 'Path of blobs to check' 
         required: false
-        default: '*'
+        default: '/vendor/lib/modules'
       RECOVERY_TAR:
         description: 'Release Recovery.tar For Samsung devices'
         required: false
@@ -113,15 +113,15 @@ jobs:
       id: manifest
       with:
         cond: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-11' || github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1'  || github.event.inputs.MANIFEST_BRANCH == 'twrp-14' }}
-        if_true: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
+        if_true: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
         if_false: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
 
     - name: Initialize Repo
       run: |
         mkdir workspace
         cd workspace
-        git config --global user.name "Samuel Kendall"
-        git config --global user.email "kinguser981@gmail.com"
+        git config --global user.name "BeepBoopBopBeep"
+        git config --global user.email "Fluffinaround@gmail.com"
         repo init --depth=1 -u ${{ steps.manifest.outputs.value }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
   
     - name: Repo Sync
